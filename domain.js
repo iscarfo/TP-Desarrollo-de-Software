@@ -168,7 +168,18 @@ class Notificacion {
   }
 }
 
-//Falta esto
+//Esto está mal
 class FactoryNotificacion {
- 
+  static crearSegunEstadoPedido(estadoPedido) {
+    return `El pedido pasó al estado: ${estadoPedido}`;
+  }
+
+  static crearSegunPedido(pedido) {
+    return new Notificacion(
+      Date.now().toString(),
+      pedido.comprador,
+      `Pedido realizado por ${pedido.comprador.nombre}, total: ${pedido.calcularTotal()}, entrega en: ${pedido.direccionEntrega.calle} ${pedido.direccionEntrega.altura}`,
+      new Date()
+    );
+  }
 }
