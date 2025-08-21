@@ -1,3 +1,17 @@
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+// ==================== ENDPOINT /health ====================
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date()
+  });
+});
+
 // ================= ENUMS =================
 const TipoUsuario = Object.freeze({
   COMPRADOR: "COMPRADOR",
@@ -139,12 +153,12 @@ class CambioEstadoPedido {
 }
 
 class Notificacion {
-  constructor(id, usuarioDestino, mensaje, fechaAlta, fechaLeida, leida) {
+  constructor(id, usuarioDestino, mensaje, fechaAlta) {
     this.id = id;
     this.usuarioDestino = usuarioDestino;
     this.mensaje = mensaje;
     this.fechaAlta = fechaAlta;
-    this.fechaLeida = fechaLeida || null;
+    this.fechaLeida = null;
     this.leida = false
   }
 
