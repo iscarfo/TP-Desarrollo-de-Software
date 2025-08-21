@@ -168,7 +168,6 @@ class Notificacion {
   }
 }
 
-//Esto está mal
 class FactoryNotificacion {
   static crearSegunEstadoPedido(estadoPedido) {
     return `El pedido pasó al estado: ${estadoPedido}`;
@@ -183,3 +182,12 @@ class FactoryNotificacion {
     );
   }
 }
+
+//to do:
+/*Respecto a las notificaciones, nuestro Teach Leader nos ha mencionado que:
+ - Cada vez que se realice un pedido, es necesario enviarle una notificación al Vendedor, 
+   donde se le indique quién realizó el pedido, qué productos incluye, el total del mismo
+   y dirección de entrega.
+ - Cada vez que un vendedor marque un pedido como enviado, es necesario notificar al comprador.
+ - Si un comprador decide cancelar un pedido, es necesario notificar al vendedor.
+ */
