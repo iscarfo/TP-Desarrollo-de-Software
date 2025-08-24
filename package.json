@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "workspaces": [
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
+    "backend": "npm run dev --workspace=backend",
+    "frontend": "npm run dev --workspace=frontend",
     "start:backend": "npm start --workspace=backend",
-    "dev:backend": "npm run dev --workspace=backend",
     "start:frontend": "npm start --workspace=frontend",
-    "start:dev": "concurrently \"npm run dev:backend\" \"npm run start:frontend\"",
+    "start:dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "lint": "eslint .",
     "format": "prettier . --write"
   },
