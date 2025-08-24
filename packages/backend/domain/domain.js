@@ -41,13 +41,13 @@ const EstadoPedido = Object.freeze({
 
 // ================= CLASES =================
 class Usuario {
-  constructor(id, nombre, email, telefono, tipoUsuario, fechaAlta) {
+  constructor(id, nombre, email, telefono, tipoUsuario) {
     this.id = id;
     this.nombre = nombre;
     this.email = email;
     this.telefono = telefono;
     this.tipoUsuario = tipoUsuario;
-    this.fechaAlta = fechaAlta;
+    this.fechaAlta = new Date();
   }
 }
 
@@ -58,13 +58,13 @@ class Categoria {
 }
 
 class Producto {
-  constructor(id, vendedor, nombre, status, descripcion, categoria, precio, moneda, stock, fotos, activo) {
+  constructor(id, vendedor, titulo, status, descripcion, categorias, precio, moneda, stock, fotos, activo) {
     this.id = id;
     this.vendedor = vendedor; // Usuario
-    this.nombre = nombre;
+    this.titulo = titulo;
     this.status = status;
     this.descripcion = descripcion;
-    this.categoria = categoria; // Categoria
+    this.categorias = categorias; // Categoria
     this.precio = precio;
     this.moneda = moneda; // Moneda
     this.stock = stock;
@@ -106,11 +106,12 @@ class ItemPedido {
 }
 
 class DireccionEntrega {
-  constructor(calle, altura, piso, departamento, ciudad, provincia, pais, lat, lon) {
+  constructor(calle, altura, piso, departamento, codPostal, ciudad, provincia, pais, lat, lon) {
     this.calle = calle;
     this.altura = altura;
     this.piso = piso;
     this.departamento = departamento;
+    this.codPostal = codPostal;
     this.ciudad = ciudad;
     this.provincia = provincia;
     this.pais = pais;
@@ -120,14 +121,14 @@ class DireccionEntrega {
 }
 
 class Pedido {
-  constructor(id, comprador, items, moneda, direccionEntrega, estado, fechaCreacion) {
+  constructor(id, comprador, items, moneda, direccionEntrega) {
     this.id = id;
     this.comprador = comprador; // Usuario
     this.items = items || []; // [ItemPedido]
     this.moneda = moneda;
     this.direccionEntrega = direccionEntrega; // DireccionEntrega
-    this.estado = estado;
-    this.fechaCreacion = fechaCreacion;
+    this.estado = EstadoPedido.PENDIENTE;
+    this.fechaCreacion = new Date();
     this.historialEstados = [];
   }
 
@@ -174,17 +175,22 @@ class Notificacion {
 }
 
 class FactoryNotificacion {
-  static crearSegunEstadoPedido(estadoPedido) {
-    return `El pedido pasó al estado: ${estadoPedido}`;
-  }
-
   static crearSegunPedido(pedido) {
     return new Notificacion(
       Date.now().toString(),
       pedido.comprador,
-      `Pedido realizado por ${pedido.comprador.nombre}, total: ${pedido.calcularTotal()}, entrega en: ${pedido.direccionEntrega.calle} ${pedido.direccionEntrega.altura}`,
+      this.crearSegunEstadoPedido(pedido),
       new Date()
     );
+  }
+
+  static crearSegunEstadoPedido(pedido) {
+    switch (pedido.estado) {
+      case EstadoPedido.PENDIENTE: return notificarVendedorPedidoCreado(pedido);
+      case EstadoPedido.ENVIADO: return notificarCompradorPedidoEnviado(pedido);
+      case EstadoPedido.CANCELADO: return notificarVendedorPedidoCancelado(pedido, 'El comprador se arrepintio');
+      default: return null;
+    }
   }
 }
 
@@ -202,3 +208,70 @@ app.listen(PORT, () => {
  - Cada vez que un vendedor marque un pedido como enviado, es necesario notificar al comprador.
  - Si un comprador decide cancelar un pedido, es necesario notificar al vendedor.
  */
+
+// ================= NOTIFICACIONES SEGÚN REGLAS =================
+
+function notificarVendedorPedidoCreado(pedido) {
+  // Notifica a cada vendedor involucrado en el pedido
+  //const vendedor = pedido.items[0].producto.vendedor;
+  const productos = pedido.items
+    .map(item => `${item.producto.titulo} x${item.cantidad}`)
+    .join(", ");
+  const mensaje = `Nuevo pedido realizado por ${pedido.comprador.nombre}. Productos: ${productos}. Total: ${pedido.calcularTotal()}. Entrega en: ${pedido.direccionEntrega.calle} ${pedido.direccionEntrega.altura}`;
+  return mensaje;
+}
+
+function notificarCompradorPedidoEnviado(pedido) {
+  const mensaje = `Tu pedido #${pedido.id} ha sido enviado.`;
+  return mensaje;
+}
+
+function notificarVendedorPedidoCancelado(pedido, motivo) {
+  //const vendedor = pedido.items[0].producto.vendedor;
+  const mensaje = `El pedido #${pedido.id} fue cancelado por el comprador. Motivo: ${motivo || 'No especificado'}`;
+  return mensaje;
+}
+
+// TEST DE NOTIFICACIONES 
+app.get('/test-notificaciones', (req, res) => {
+  // Crear un comprador
+  const comprador = new Usuario(1, "Facundo", "facu@mail.com", "123456", TipoUsuario.COMPRADOR);
+
+  // Crear un vendedor
+  const vendedor = new Usuario(2, "Juan", "juan@mail.com", "789101", TipoUsuario.VENDEDOR);
+
+  // Crear un vendedor
+  const vendedor2 = new Usuario(3, "Pepe", "pepe@mail.com", "789102", TipoUsuario.VENDEDOR);
+
+  // Crear un producto
+  const producto = new Producto(1, vendedor, "Pistachos Premium", "DISPONIBLE", "Bolsa de 1kg", [], 5000, Moneda.PESO_ARG, 10, [], true);
+
+  // Crear un producto
+  const producto2 = new Producto(2, vendedor2, "zapatillas", "DISPONIBLE", "par de zapas", [], 5000, Moneda.PESO_ARG, 10, [], true);
+
+  // Crear item de pedido
+  const item = new ItemPedido(producto, 2, producto.precio);
+
+  // Crear item de pedido
+  const item2 = new ItemPedido(producto2, 5, producto2.precio);
+
+  // Dirección de entrega
+  const direccion = new DireccionEntrega("Av. Siempre Viva", 742, null, null, "1000", "CABA", "Buenos Aires", "Argentina", -34.6, -58.4);
+
+  // Crear pedido
+  const pedido = new Pedido(1, comprador, [item, item2], Moneda.PESO_ARG, direccion);
+
+  // Llamar a las funciones de notificación
+  const notif = FactoryNotificacion.crearSegunPedido(pedido);
+  pedido.actualizarEstado(EstadoPedido.ENVIADO, vendedor);
+  const notif2 = FactoryNotificacion.crearSegunPedido(pedido);
+  pedido.actualizarEstado(EstadoPedido.CANCELADO, comprador, "El comprador se arrepintió");
+  const notif3 = FactoryNotificacion.crearSegunPedido(pedido);
+
+
+  //const notif1 = notificarVendedorPedidoCreado(pedido);
+  //const notif2 = notificarCompradorPedidoEnviado(pedido);
+  //const notif3 = notificarVendedorPedidoCancelado(pedido, "El comprador se arrepintió");
+
+  res.json({ notif, notif2, notif3 });
+});
