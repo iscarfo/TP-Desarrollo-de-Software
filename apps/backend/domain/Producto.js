@@ -5,13 +5,25 @@ export class Categoria {
 }
 
 export class Producto {
-  constructor(id, vendedor, nombre, status, descripcion, categoria, precio, moneda, stock, fotos, activo) {
+  constructor(
+    id,
+    vendedor,
+    titulo,
+    status,
+    descripcion,
+    categorias,
+    precio,
+    moneda,
+    stock,
+    fotos,
+    activo,
+  ) {
     this.id = id;
     this.vendedor = vendedor; // Usuario
-    this.nombre = nombre;
+    this.titulo = titulo;
     this.status = status;
     this.descripcion = descripcion;
-    this.categoria = categoria; // Categoria
+    this.categorias = categorias; // Categoria
     this.precio = precio;
     this.moneda = moneda; // Moneda
     this.stock = stock;
@@ -36,6 +48,6 @@ export class Producto {
   }
 
   agregarFoto(foto) {
-    this.fotos.push(foto)
+    this.fotos.push(foto);
   }
 }

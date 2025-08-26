@@ -1,5 +1,5 @@
-import { EstadoPedido } from './enums.js';
-import { FactoryNotificacion } from './Notificacion.js';
+import { EstadoPedido } from "./enums.js";
+import { FactoryNotificacion } from "./Notificacion.js";
 
 export class ItemPedido {
   constructor(producto, cantidad, precioUnitario) {
@@ -14,11 +14,23 @@ export class ItemPedido {
 }
 
 export class DireccionEntrega {
-  constructor(calle, altura, piso, departamento, ciudad, provincia, pais, lat, lon) {
+  constructor(
+    calle,
+    altura,
+    piso,
+    departamento,
+    codPostal,
+    ciudad,
+    provincia,
+    pais,
+    lat,
+    lon,
+  ) {
     this.calle = calle;
     this.altura = altura;
     this.piso = piso;
     this.departamento = departamento;
+    this.codPostal = codPostal;
     this.ciudad = ciudad;
     this.provincia = provincia;
     this.pais = pais;
@@ -28,14 +40,14 @@ export class DireccionEntrega {
 }
 
 export class Pedido {
-  constructor(id, comprador, items, moneda, direccionEntrega, estado, fechaCreacion) {
+  constructor(id, comprador, items, moneda, direccionEntrega) {
     this.id = id;
     this.comprador = comprador; // Usuario
     this.items = items || []; // [ItemPedido]
     this.moneda = moneda;
     this.direccionEntrega = direccionEntrega; // DireccionEntrega
-    this.estado = estado;
-    this.fechaCreacion = fechaCreacion;
+    this.estado = EstadoPedido.PENDIENTE;
+    this.fechaCreacion = new Date();
     this.historialEstados = [];
   }
 
@@ -44,29 +56,40 @@ export class Pedido {
   }
 
   actualizarEstado(nuevoEstado, quien, motivo) {
-    const cambio = new CambioEstadoPedido(new Date(), nuevoEstado, this, quien, motivo);
+    const cambio = new CambioEstadoPedido(
+      new Date(),
+      nuevoEstado,
+      this,
+      quien,
+      motivo,
+    );
     this.historialEstados.push(cambio);
     this.estado = nuevoEstado;
-    
+
     if (nuevoEstado === EstadoPedido.ENVIADO) {
       const notificacion = FactoryNotificacion.crearNotificacionEnvio(this);
     }
-    
+
     if (nuevoEstado === EstadoPedido.CANCELADO) {
       const vendedores = this.obtenerVendedores();
-      vendedores.forEach(vendedor => {
-        const notificacion = FactoryNotificacion.crearNotificacionCancelacion(this, vendedor);
+      vendedores.forEach((vendedor) => {
+        const notificacion = FactoryNotificacion.crearNotificacionCancelacion(
+          this,
+          vendedor,
+        );
       });
     }
   }
 
   validarStock() {
-    return this.items.every(item => item.producto.estaDisponible(item.cantidad));
+    return this.items.every((item) =>
+      item.producto.estaDisponible(item.cantidad),
+    );
   }
 
   obtenerVendedores() {
     const vendedores = new Set();
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       vendedores.add(item.producto.vendedor);
     });
     return Array.from(vendedores);
@@ -74,8 +97,11 @@ export class Pedido {
 
   crearPedido() {
     const vendedores = this.obtenerVendedores();
-    vendedores.forEach(vendedor => {
-      const notificacion = FactoryNotificacion.crearNotificacionNuevoPedido(this, vendedor);
+    vendedores.forEach((vendedor) => {
+      const notificacion = FactoryNotificacion.crearNotificacionNuevoPedido(
+        this,
+        vendedor,
+      );
     });
   }
 }

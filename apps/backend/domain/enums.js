@@ -1,13 +1,13 @@
 export const TipoUsuario = Object.freeze({
   COMPRADOR: "COMPRADOR",
   VENDEDOR: "VENDEDOR",
-  ADMIN: "ADMIN"
+  ADMIN: "ADMIN",
 });
 
 export const Moneda = Object.freeze({
   PESO_ARG: "PESO_ARG",
   DOLAR_USA: "DOLAR_USA",
-  REAL: "REAL"
+  REAL: "REAL",
 });
 
 export const EstadoPedido = Object.freeze({
@@ -16,5 +16,5 @@ export const EstadoPedido = Object.freeze({
   EN_PREPARACION: "EN_PREPARACION",
   ENVIADO: "ENVIADO",
   ENTREGADO: "ENTREGADO",
-  CANCELADO: "CANCELADO"
+  CANCELADO: "CANCELADO",
 });
